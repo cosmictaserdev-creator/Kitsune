@@ -129,6 +129,17 @@ fun ThemesTab(navigate: (String) -> Unit) {
             ThemePreview(selected, Modifier.fillMaxWidth().padding(16.dp))
             SettingsRow("Customize appearance", "Colors, shapes, borders, fonts and background", SettingsIcons.Themes) { navigate(SettingsDestination.Appearance) }
         }
+        SettingsSection("Kitsune Pro", "One-time purchase. Unlocks the advanced theme editor and every collection.") {
+            val billing = remember { helium314.keyboard.latin.billing.KitsuneBilling.get(context) }
+            val owned by billing.owned.collectAsState()
+            val message by billing.message.collectAsState()
+            val pro = helium314.keyboard.latin.billing.Products.PRO in owned
+            SettingsRow(if (pro) "Kitsune Pro is unlocked" else "Unlock Kitsune Pro",
+                message.ifBlank { if (pro) "Thank you for supporting Kitsune" else "Theme editor, collections and more" }, SettingsIcons.Sparkles) {
+                if (!pro) context.getActivity()?.let { billing.buy(it, helium314.keyboard.latin.billing.Products.PRO) }
+            }
+            if (!pro) SettingsRow("Restore purchases", "Already bought on another device?", SettingsIcons.Check) { billing.restore() }
+        }
         CupertinoSegmentedControl(collection, Modifier.fillMaxWidth().padding(horizontal = 20.dp), tabs = {
             listOf("Included", "My themes", "Collections").forEachIndexed { index, title ->
                 CupertinoSegmentedControlTab({ collection = index }, collection == index) { CupertinoText(title) }

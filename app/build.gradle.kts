@@ -44,6 +44,7 @@ android {
 
     defaultConfig {
         applicationId = "com.cosmictaser.kitsune"
+        buildConfigField("String", "KITSUNE_API_BASE", "\"${providers.gradleProperty("kitsuneApiBase").orNull ?: ""}\"")
         buildConfigField("String", "WHISPRY_PACKAGE", "\"${providers.gradleProperty("whispryPackage").orNull ?: "com.cosmictaser.whispry"}\"")
         minSdk = 24
         targetSdk = 36
@@ -194,6 +195,7 @@ android {
 dependencies {
     implementation(project(":hig"))
     implementation("androidx.dynamicanimation:dynamicanimation:1.1.0")
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
     implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.4")
     // androidx
     implementation("androidx.core:core-ktx:1.17.0") // 1.18.0 requires minSdk 23

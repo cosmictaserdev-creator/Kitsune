@@ -1,0 +1,19 @@
+name = "kitsune-api"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# R2 bucket holding original theme packs (private; never public)
+[[r2_buckets]]
+binding = "PACKS"
+bucket_name = "kitsune-theme-packs"
+
+# Verified purchases, keyed by sha256(purchaseToken)
+[[kv_namespaces]]
+binding = "ENTITLEMENTS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets (set with `wrangler secret put`):
+#   GOOGLE_SERVICE_ACCOUNT_JSON   service account with Play Developer API access to the app
+#   URL_SIGNING_KEY               random 32+ bytes, used to sign short-lived pack URLs
+[vars]
+ANDROID_PACKAGE = "com.cosmictaser.kitsune"

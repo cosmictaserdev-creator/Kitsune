@@ -797,6 +797,11 @@ New dictionary:
     <!-- Theme name for sand theme -->
     <string name="theme_name_sand" tools:keep="@string/theme_name_sand">Sand</string>
     <!-- Theme name for violette theme -->
+    <string name="theme_name_ios_graphite" tools:keep="@string/theme_name_ios_graphite" translatable="false">iOS Graphite</string>
+    <string name="theme_name_ios_midnight" tools:keep="@string/theme_name_ios_midnight" translatable="false">iOS Midnight</string>
+    <string name="theme_name_ios_light" tools:keep="@string/theme_name_ios_light" translatable="false">iOS Light</string>
+    <string name="theme_name_ios_rose" tools:keep="@string/theme_name_ios_rose" translatable="false">iOS Rose</string>
+    <string name="theme_name_ios_mint" tools:keep="@string/theme_name_ios_mint" translatable="false">iOS Mint</string>
     <string name="theme_name_violette" tools:keep="@string/theme_name_violette">Violette</string>
     <string name="theme_name_frosted_glass">Frosted Glass</string>
     <string name="theme_frosted_glass_settings_header">Frosted Glass Settings</string>

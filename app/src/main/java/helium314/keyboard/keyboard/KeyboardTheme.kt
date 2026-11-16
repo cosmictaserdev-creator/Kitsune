@@ -101,6 +101,12 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
         const val THEME_PINK = "pink"
         const val THEME_SAND = "sand"
         const val THEME_VIOLETTE = "violette"
+        // Kitsune iOS-layout family (graphite reference): same layout language, five colour variants
+        const val THEME_IOS_GRAPHITE = "ios_graphite"
+        const val THEME_IOS_MIDNIGHT = "ios_midnight"
+        const val THEME_IOS_LIGHT = "ios_light"
+        const val THEME_IOS_ROSE = "ios_rose"
+        const val THEME_IOS_MINT = "ios_mint"
         const val THEME_FROSTED_GLASS = "frosted_glass"
         fun getAvailableDefaultColors(prefs: SharedPreferences, isNight: Boolean) = listOfNotNull(
             if (!isNight) THEME_LIGHT else null, THEME_DARK,
@@ -118,7 +124,12 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
             if (!isNight) THEME_PINK else null,
             THEME_OCEAN,
             if (!isNight) THEME_SAND else null,
-            THEME_VIOLETTE
+            THEME_VIOLETTE,
+            THEME_IOS_GRAPHITE,
+            THEME_IOS_MIDNIGHT,
+            if (!isNight) THEME_IOS_LIGHT else null,
+            THEME_IOS_ROSE,
+            if (!isNight) THEME_IOS_MINT else null,
         )
         val STYLES = arrayOf(STYLE_DEFAULT, STYLE_MATERIAL, STYLE_HOLO, STYLE_ROUNDED, STYLE_CIRCLE)
 
@@ -500,6 +511,66 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                     Color.WHITE,
                     Color.BLACK,
                     Color.BLACK,
+                    keyboardBackground = backgroundImage
+                )
+                THEME_IOS_GRAPHITE -> DefaultColors(
+                    themeStyle,
+                    hasBorders,
+                    "#0A84FF".toColorInt(),
+                    "#2C2C2E".toColorInt(),
+                    "#6A6A6C".toColorInt(),
+                    "#48484A".toColorInt(),
+                    "#6A6A6C".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#AEAEB2".toColorInt(),
+                    keyboardBackground = backgroundImage
+                )
+                THEME_IOS_MIDNIGHT -> DefaultColors(
+                    themeStyle,
+                    hasBorders,
+                    "#0A84FF".toColorInt(),
+                    "#000000".toColorInt(),
+                    "#2A2A2D".toColorInt(),
+                    "#161618".toColorInt(),
+                    "#2A2A2D".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#8E8E93".toColorInt(),
+                    keyboardBackground = backgroundImage
+                )
+                THEME_IOS_LIGHT -> DefaultColors(
+                    themeStyle,
+                    hasBorders,
+                    "#007AFF".toColorInt(),
+                    "#D1D3D9".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#ADB1BA".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#000000".toColorInt(),
+                    "#6C6C70".toColorInt(),
+                    keyboardBackground = backgroundImage
+                )
+                THEME_IOS_ROSE -> DefaultColors(
+                    themeStyle,
+                    hasBorders,
+                    "#FF6B9A".toColorInt(),
+                    "#3A2A30".toColorInt(),
+                    "#6B4A55".toColorInt(),
+                    "#4A3239".toColorInt(),
+                    "#6B4A55".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#E3B5C4".toColorInt(),
+                    keyboardBackground = backgroundImage
+                )
+                THEME_IOS_MINT -> DefaultColors(
+                    themeStyle,
+                    hasBorders,
+                    "#2FBF8A".toColorInt(),
+                    "#E3F1EA".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#B9D6C8".toColorInt(),
+                    "#FFFFFF".toColorInt(),
+                    "#14332A".toColorInt(),
+                    "#4F7A69".toColorInt(),
                     keyboardBackground = backgroundImage
                 )
                 THEME_VIOLETTE -> DefaultColors(

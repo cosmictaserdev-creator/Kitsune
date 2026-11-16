@@ -1,4 +1,11 @@
-# Whispry Keys + Whispry: project direction and implementation handoff
+# Kitsune + Whispry: project direction and implementation handoff
+
+> **16 Nov 2026 update:** the keyboard is now **Kitsune** (`com.cosmictaser.kitsune`, repo `cosmictaserdev-creator/Kitsune`, GPL-3).
+> Done since this handoff: rebrand, signed-release workflow, floating glass tab bar, rounded edge-lit voice row,
+> double-tap tools panel (tones, voice translation, feature shortcuts), bridge protocol v2 (`tools`, `selectTone`,
+> `setTranslation`), onboarding rewrite, iOS theme family (5 variants), Play Billing + Cloudflare Worker skeleton.
+> Not yet verified on a device: everything visual above. Theme pixel-fidelity pass, Pro editor, gesture mapping and real
+> Play products are still to do. Bridge package ids below now refer to `com.cosmictaser.kitsune(.debug)`.
 
 Updated: 16 November 2026.
 
