@@ -134,19 +134,25 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         renderPanel()
     }
 
+    /** The panel replaces the key area: same bounds, keys hidden (not removed, so the keyboard keeps its measured height). */
     private fun renderPanel() {
         val view = panel ?: return
         val open = _panelOpen.value
-        if (open) {
-            val strip = (overlay?.parent as? View)
-            val frame = view.parent as? View
-            val top = if (strip != null && frame != null) (strip.bottom + ((strip.parent as? View)?.top ?: 0)).coerceAtLeast(0) else 0
-            (view.layoutParams as? FrameLayout.LayoutParams)?.let { it.topMargin = top; view.layoutParams = it }
+        val wrapper = keys
+        if (open && wrapper != null) {
+            var top = 0
+            var parent: View? = wrapper
+            while (parent != null && parent !== view.parent) { top += parent.top; parent = parent.parent as? View }
+            (view.layoutParams as? FrameLayout.LayoutParams)?.let {
+                it.gravity = android.view.Gravity.TOP
+                it.topMargin = top
+                it.height = wrapper.height.coerceAtLeast(1)
+                view.layoutParams = it
+            }
         }
         view.visibility = if (open) View.VISIBLE else View.GONE
-        // Dim/blur the keys beneath; Android < 12 just relies on the panel's translucent scrim.
-        keys?.let { k ->
-            if (Build.VERSION.SDK_INT >= 31) k.setRenderEffect(if (open) android.graphics.RenderEffect.createBlurEffect(18f, 18f, android.graphics.Shader.TileMode.CLAMP) else null)
+        wrapper?.let { k ->
+            k.visibility = if (open) View.INVISIBLE else View.VISIBLE
             k.importantForAccessibility = if (open) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         }
     }
@@ -297,18 +303,44 @@ class WhispryKeyboardController(private val ime: LatinIME) {
 
     private fun renderVisibility() {
         val visible = _state.value.visible
-        overlay?.visibility = if (visible) View.VISIBLE else View.GONE
+        val voice = overlay
+        if (voice != null) {
+            if (visible && voice.visibility != View.VISIBLE) {
+                // The voice row rolls up into place from below, like the next face of a drum.
+                voice.visibility = View.VISIBLE
+                prepareRoll(voice)
+                voice.rotationX = -90f; voice.translationY = voice.height * 0.5f; voice.alpha = 0f
+                rollTo(voice, 0f, 0f, 1f)
+            } else if (!visible && voice.visibility == View.VISIBLE) {
+                rollTo(voice, -90f, voice.height * 0.5f, 0f) { voice.visibility = View.GONE }
+            }
+        }
         if (hidden == visible) return
         hidden = visible
         toolbar?.let { view ->
             view.isEnabled = !visible
             view.importantForAccessibility = if (visible) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
-            val targetX = if (visible) view.width.toFloat() else 0f
-            SpringAnimation(view, SpringAnimation.TRANSLATION_X, targetX).apply {
-                spring = SpringForce(targetX).setDampingRatio(.85f).setStiffness(400f)
-            }.start()
-            view.animate().alpha(if (visible) 0f else 1f).translationY(if (visible) -8f else 0f).setDuration(180).start()
+            // The toolbar rolls away downwards (its top edge tips back and it drops out), keeping its height so the host doesn't jump.
+            prepareRoll(view)
+            if (visible) rollTo(view, 90f, view.height * 0.5f, 0f) else rollTo(view, 0f, 0f, 1f)
         }
+    }
+
+    private fun prepareRoll(view: View) {
+        view.pivotX = view.width / 2f
+        view.pivotY = view.height / 2f
+        view.cameraDistance = 12000f * view.resources.displayMetrics.density
+    }
+
+    /** Spring-driven roll (rotationX + drop + fade). Animations are skipped entirely when the user disabled them. */
+    private fun rollTo(view: View, rotation: Float, dropY: Float, alpha: Float, end: (() -> Unit)? = null) {
+        val scale = android.provider.Settings.Global.getFloat(ime.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        if (scale == 0f) { view.rotationX = rotation; view.translationY = dropY; view.alpha = alpha; end?.invoke(); return }
+        fun spring(property: androidx.dynamicanimation.animation.DynamicAnimation.ViewProperty, target: Float) =
+            SpringAnimation(view, property, target).apply { spring = SpringForce(target).setDampingRatio(.8f).setStiffness(260f) }
+        spring(SpringAnimation.ROTATION_X, rotation).start()
+        spring(SpringAnimation.TRANSLATION_Y, dropY).start()
+        spring(SpringAnimation.ALPHA, alpha).apply { addEndListener { _, _, _, _ -> end?.invoke() } }.start()
     }
 
     fun pause() = command("PAUSE")

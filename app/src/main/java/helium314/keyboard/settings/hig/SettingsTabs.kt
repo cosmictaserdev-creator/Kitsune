@@ -118,7 +118,7 @@ fun ThemesTab(navigate: (String) -> Unit) {
     val prefs = context.prefs()
     val changes by ((context.getActivity() as SettingsActivity).prefChanged).collectAsState()
     var collection by rememberSaveable { mutableIntStateOf(0) }
-    val selected = remember(changes) { prefs.getString(Settings.PREF_THEME_COLORS, Defaults.PREF_THEME_COLORS)!! }
+    val selected = remember(changes) { KeyboardTheme.activeColors(context, prefs) }
     val builtIns = remember(changes) { KeyboardTheme.getAvailableDefaultColors(prefs, false) }
     val custom = remember(changes) {
         prefs.all.keys.mapNotNull { key -> listOf(Settings.PREF_USER_COLORS_PREFIX, Settings.PREF_USER_ALL_COLORS_PREFIX, Settings.PREF_USER_MORE_COLORS_PREFIX)
@@ -172,10 +172,7 @@ fun ThemesTab(navigate: (String) -> Unit) {
                         val shape = RoundedCornerShape(20.dp)
                         Column(Modifier.weight(1f).background(CupertinoTheme.colorScheme.secondarySystemGroupedBackground, shape)
                             .border(if (active) 2.dp else 0.dp, if (active) CupertinoTheme.colorScheme.accent else Color.Transparent, shape)
-                            .clickable {
-                                prefs.edit { putString(Settings.PREF_THEME_COLORS, name) }
-                                KeyboardSwitcher.getInstance().setThemeNeedsReload()
-                            }.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            .clickable { KeyboardTheme.selectColors(prefs, name) }.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             ThemePreview(name, Modifier.fillMaxWidth())
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 CupertinoText(name.getStringResourceOrName("theme_name_", context), modifier = Modifier.weight(1f), style = CupertinoTheme.typography.subhead)

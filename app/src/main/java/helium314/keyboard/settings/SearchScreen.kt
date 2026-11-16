@@ -23,6 +23,7 @@ import dev.chrisbanes.haze.haze
 import helium314.keyboard.latin.R
 import helium314.keyboard.settings.hig.SettingsIcons
 import helium314.keyboard.settings.preferences.PreferenceCategory
+import helium314.keyboard.settings.preferences.PreferenceGroup
 import zone.ien.hig.*
 import zone.ien.hig.theme.CupertinoTheme
 
@@ -55,12 +56,21 @@ fun SearchSettingsScreen(
         filteredItems ?: { SettingsActivity.settingsContainer.filter(it) },
         itemContent = { it.Preference() }, hideTopSearchBar = hideTopSearchBar, showBackButton = showBackButton,
         content = content ?: {
+            // Split into sections at each header (Int) and render every section as one grouped card.
+            val sections = mutableListOf<Pair<Int?, MutableList<Any>>>()
             settings.forEach { setting ->
                 when (setting) {
-                    is Int -> PreferenceCategory(stringResource(setting))
+                    is Int -> sections += setting to mutableListOf()
                     null -> Unit
-                    else -> SettingsActivity.settingsContainer[setting]?.Preference()
+                    else -> {
+                        if (sections.isEmpty()) sections += null to mutableListOf()
+                        sections.last().second += setting
+                    }
                 }
+            }
+            sections.forEach { (header, items) ->
+                if (header != null) PreferenceCategory(stringResource(header))
+                if (items.isNotEmpty()) PreferenceGroup { items.forEach { SettingsActivity.settingsContainer[it]?.Preference() } }
             }
         })
 }

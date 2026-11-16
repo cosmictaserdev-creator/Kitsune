@@ -102,6 +102,8 @@ android {
             isJniDebuggable = false
             applicationIdSuffix = ".debug"
             manifestPlaceholders["stickerProviderAuthority"] = "${defaultConfig.applicationId}.debug.stickercontentprovider"
+            // Debug talks to the separately installed Whispry Bridge test app unless -PwhispryPackage says otherwise.
+            buildConfigField("String", "WHISPRY_PACKAGE", "\"${providers.gradleProperty("whispryPackage").orNull ?: "com.cosmictaser.whispry.bridge"}\"")
         }
         create("runTests") { // build variant for running tests on CI that skips tests known to fail
             matchingFallbacks += listOf("debug")

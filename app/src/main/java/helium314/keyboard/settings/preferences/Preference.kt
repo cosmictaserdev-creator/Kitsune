@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,8 +32,18 @@ import helium314.keyboard.latin.R
 import helium314.keyboard.settings.IconOrImage
 import helium314.keyboard.latin.utils.Theme
 import helium314.keyboard.latin.utils.previewDark
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 // partially taken from StreetComplete / SCEE
+
+/** True while rendering inside a [PreferenceGroup]: rows are flat and separated by hairlines instead of being blocks. */
+val LocalPreferenceGrouped = compositionLocalOf { false }
 
 @Composable
 fun PreferenceCategory(
@@ -41,10 +52,28 @@ fun PreferenceCategory(
 ) {
     Column {
         Text(
-            text = title,
-            modifier = modifier.padding(top = 12.dp, start = 16.dp, end = 8.dp, bottom = 8.dp),
+            text = title.uppercase(),
+            modifier = modifier.padding(top = 18.dp, start = 36.dp, end = 28.dp, bottom = 6.dp),
             color = zone.ien.hig.theme.CupertinoTheme.colorScheme.secondaryLabel,
-            style = MaterialTheme.typography.titleSmall
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+}
+
+/** iOS-style inset grouped card: one rounded surface holding all rows of a section, hairlines between them. */
+@Composable
+fun PreferenceGroup(content: @Composable ColumnScope.() -> Unit) {
+    val surface = zone.ien.hig.theme.CupertinoTheme.colorScheme.secondarySystemGroupedBackground
+    CompositionLocalProvider(LocalPreferenceGrouped provides true) {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp)
+                .clip(RoundedCornerShape(20.dp)).background(surface)
+                .drawWithContent {
+                    drawContent()
+                    // every row draws a bottom hairline; hide the last one so separators sit only between rows
+                    drawRect(surface, Offset(0f, size.height - 1.dp.toPx()), Size(size.width, 1.dp.toPx()))
+                },
+            content = content
         )
     }
 }
@@ -58,14 +87,20 @@ fun Preference(
     @DrawableRes icon: Int? = null,
     value: @Composable (RowScope.() -> Unit)? = null,
 ) {
+    val grouped = LocalPreferenceGrouped.current
+    val separator = zone.ien.hig.theme.CupertinoTheme.colorScheme.separator
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 1.dp)
-            .background(zone.ien.hig.theme.CupertinoTheme.colorScheme.secondarySystemGroupedBackground, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+            .then(if (grouped) Modifier.drawBehind {
+                val y = size.height - 0.5.dp.toPx()
+                drawLine(separator, Offset(16.dp.toPx(), y), Offset(size.width, y), 0.5.dp.toPx())
+            } else Modifier
+                .padding(horizontal = 20.dp, vertical = 1.dp)
+                .background(zone.ien.hig.theme.CupertinoTheme.colorScheme.secondarySystemGroupedBackground, RoundedCornerShape(12.dp)))
             .clickable { onClick() }
-            .heightIn(min = 44.dp)
-            .padding(vertical = 10.dp, horizontal = 12.dp),
+            .heightIn(min = 48.dp)
+            .padding(vertical = 10.dp, horizontal = if (grouped) 16.dp else 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

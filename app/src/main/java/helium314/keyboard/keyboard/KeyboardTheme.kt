@@ -200,6 +200,25 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
             return getThemeColors(themeName!!, themeStyle!!, context, prefs, isNight)
         }
 
+        /**
+         * Picks a colour theme for both day and night. With automatic day/night on (the default), the keyboard reads the
+         * night preference in dark mode, so writing only the day one made included themes appear to do nothing.
+         */
+        fun selectColors(prefs: SharedPreferences, name: String) {
+            prefs.edit()
+                .putString(Settings.PREF_THEME_COLORS, name)
+                .putString(Settings.PREF_THEME_COLORS_NIGHT, name)
+                .apply()
+            KeyboardSwitcher.getInstance().setThemeNeedsReload()
+        }
+
+        /** The colour theme currently in effect (night preference in dark mode with automatic day/night on). */
+        fun activeColors(context: Context, prefs: SharedPreferences): String {
+            val night = ResourceUtils.isNight(context.resources) && prefs.getBoolean(Settings.PREF_THEME_DAY_NIGHT, Defaults.PREF_THEME_DAY_NIGHT)
+            return if (night) prefs.getString(Settings.PREF_THEME_COLORS_NIGHT, Defaults.PREF_THEME_COLORS_NIGHT)!!
+            else prefs.getString(Settings.PREF_THEME_COLORS, Defaults.PREF_THEME_COLORS)!!
+        }
+
         /** Resolves preview colors without writing preferences or changing the active keyboard. */
         fun getPreviewColors(context: Context, name: String): Colors = getThemeColors(
             name, context.prefs().getString(Settings.PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE)!!,

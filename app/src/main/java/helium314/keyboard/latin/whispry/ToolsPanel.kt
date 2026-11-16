@@ -54,7 +54,7 @@ fun ToolsPanel(controller: WhispryKeyboardController) {
     Theme {
         AnimatedVisibility(open, enter = fadeIn(spring()) + slideInVertically(spring(dampingRatio = 0.85f, stiffness = 400f)) { it / 6 },
             exit = fadeOut() + slideOutVertically { it / 6 }) {
-            Column(Modifier.fillMaxSize().background(surface.copy(alpha = 0.88f))
+            Column(Modifier.fillMaxSize().background(surface)
                 // Swallow every touch so the dimmed keys underneath cannot be typed.
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                 .padding(top = 8.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

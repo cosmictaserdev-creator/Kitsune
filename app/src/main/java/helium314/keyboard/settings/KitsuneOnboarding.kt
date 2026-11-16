@@ -252,7 +252,7 @@ private fun Setup(done: () -> Unit) {
                 items(themes, key = { it }) { name ->
                     Box(Modifier.width(120.dp).clip(RoundedCornerShape(14.dp))
                         .border(if (name == themeName) 2.dp else 0.dp, if (name == themeName) Color.White else Color.Transparent, RoundedCornerShape(14.dp))
-                        .clickable { themeName = name; prefs.edit { putString(Settings.PREF_THEME_COLORS, name) }; KeyboardSwitcher.getInstance().setThemeNeedsReload() }) {
+                        .clickable { themeName = name; KeyboardTheme.selectColors(prefs, name) }) {
                         ThemePreview(name, Modifier.fillMaxWidth().padding(6.dp))
                     }
                 }

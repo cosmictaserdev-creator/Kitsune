@@ -50,6 +50,49 @@ private fun flowingColors(phase: Float): List<Color> {
     return shifted + shifted.first()
 }
 
+/**
+ * Edge-lit aurora as an AGSL shader (Android 13+): a signed-distance field of the rounded rectangle gives an exponential,
+ * perfectly smooth falloff from the rim, a cosine palette flows around the edge driven by noise, and microphone level
+ * deepens the glow. Colours are premultiplied. Older devices use the layered-stroke fallback below.
+ */
+private const val GLOW_AGSL = """
+uniform float2 size;
+uniform float time;
+uniform float level;
+uniform float dim;
+uniform float radius;
+
+float sdRoundRect(float2 p, float2 b, float r) {
+    float2 q = abs(p) - b + r;
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+float hash(float2 p) { return fract(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
+float noise(float2 p) {
+    float2 i = floor(p); float2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + float2(1.0, 0.0)), f.x),
+               mix(hash(i + float2(0.0, 1.0)), hash(i + float2(1.0, 1.0)), f.x), f.y);
+}
+half3 palette(float t) {
+    return half3(0.5 + 0.5 * cos(6.28318 * (t + float3(0.80, 0.20, 0.55))));
+}
+half4 main(float2 fc) {
+    float2 p = fc - size * 0.5;
+    float edge = max(-sdRoundRect(p, size * 0.5, radius), 0.0);
+    float ang = atan(p.y, p.x);
+    float flow = ang / 6.28318 + time * 0.045 + noise(float2(ang * 1.4, time * 0.12)) * 0.4;
+    half3 col = palette(flow);
+    float breath = 0.5 + 0.5 * sin(time * 1.15);
+    float energy = clamp(level * 1.25 + 0.16 * breath, 0.0, 1.0) * dim;
+    float reach = 9.0 + energy * 36.0;
+    float g = exp(-edge / reach);
+    g = g * g * (1.0 + energy * 1.5);
+    float rim = smoothstep(2.4, 0.0, edge) * 0.85 * (0.35 + energy);
+    float a = clamp(g * (0.5 + 0.55 * energy) + rim, 0.0, 1.0) * mix(0.55, 1.0, dim);
+    return half4(col * a, a);
+}
+"""
+
 @Composable
 fun VoiceRow(controller: WhispryKeyboardController) {
     val state by controller.state.collectAsState()
@@ -80,10 +123,31 @@ fun VoiceRow(controller: WhispryKeyboardController) {
             val animated = state.visible && !paused && !reduceMotion
             val ambient = if (animated) (sin(breath) * 0.5f + 0.5f) * 0.25f else 0.1f
             val energy = ((if (processing) 0.35f else level) + ambient).coerceIn(0f, 1f) * dim
-            Canvas(Modifier.fillMaxSize()) {
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                val shader = remember { android.graphics.RuntimeShader(GLOW_AGSL) }
+                val brush = remember(shader) { androidx.compose.ui.graphics.ShaderBrush(shader) }
+                // Time only advances while animating, so a paused or hidden row costs nothing.
+                val clock = remember { mutableFloatStateOf(0f) }
+                LaunchedEffect(animated) {
+                    if (animated) {
+                        var last = 0L
+                        while (true) androidx.compose.runtime.withFrameNanos { now ->
+                            if (last != 0L) clock.floatValue += (now - last) / 1_000_000_000f
+                            last = now
+                        }
+                    }
+                }
+                Canvas(Modifier.fillMaxSize()) {
+                    shader.setFloatUniform("size", size.width, size.height)
+                    shader.setFloatUniform("time", clock.floatValue)
+                    shader.setFloatUniform("level", (if (processing) 0.3f else level))
+                    shader.setFloatUniform("dim", dim)
+                    shader.setFloatUniform("radius", 18.dp.toPx())
+                    drawRect(brush)
+                }
+            } else Canvas(Modifier.fillMaxSize()) {
                 val brush = Brush.sweepGradient(flowingColors(if (animated) drift else 0f), center)
                 val corner = CornerRadius(18.dp.toPx())
-                // Layered strokes fade inwards so the colour hugs the edge and the centre stays dark.
                 for (i in 0..6) {
                     val width = (2.5f + i * 5f).dp.toPx() * (0.65f + energy * 1.1f)
                     val alpha = (0.55f - i * 0.075f).coerceAtLeast(0.02f) * (0.55f + energy * 0.9f).coerceAtMost(1f)
