@@ -127,7 +127,14 @@ fun ThemesTab(navigate: (String) -> Unit) {
     SearchSettingsScreen({}, "Themes", emptyList(), hideTopSearchBar = true, showBackButton = false) {
         SettingsSection("Your keyboard") {
             ThemePreview(selected, Modifier.fillMaxWidth().padding(16.dp))
-            SettingsRow("Customize appearance", "Colors, shapes, borders, fonts and background", SettingsIcons.Themes) { navigate(SettingsDestination.Appearance) }
+            val billing = remember { helium314.keyboard.latin.billing.KitsuneBilling.get(context) }
+            val owned by billing.owned.collectAsState()
+            val pro = helium314.keyboard.latin.billing.Products.PRO in owned
+            // The detailed editor is the Pro "Theme Studio"; locked until a verified purchase exists.
+            SettingsRow(if (pro) "Theme Studio" else "Theme Studio (Pro)", "Colors, shapes, borders, fonts and background", SettingsIcons.Themes) {
+                if (pro) navigate(SettingsDestination.Appearance)
+                else context.getActivity()?.let { billing.buy(it, helium314.keyboard.latin.billing.Products.PRO) }
+            }
         }
         SettingsSection("Kitsune Pro", "One-time purchase. Unlocks the advanced theme editor and every collection.") {
             val billing = remember { helium314.keyboard.latin.billing.KitsuneBilling.get(context) }
