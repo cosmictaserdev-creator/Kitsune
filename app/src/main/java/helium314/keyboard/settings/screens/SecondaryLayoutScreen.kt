@@ -2,7 +2,7 @@
 package helium314.keyboard.settings.screens
 
 import android.content.Context
-import androidx.compose.material3.Surface
+import helium314.keyboard.settings.hig.HigSurface as Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue

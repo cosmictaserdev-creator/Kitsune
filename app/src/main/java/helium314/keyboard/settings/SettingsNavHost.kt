@@ -4,6 +4,20 @@ package helium314.keyboard.settings
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
+import helium314.keyboard.settings.hig.*
+import zone.ien.hig.*
+import zone.ien.hig.utils.rememberDefaultBackdrop
+import zone.ien.hig.theme.CupertinoTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +55,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+@OptIn(zone.ien.hig.ExperimentalCupertinoApi::class)
 @Composable
 fun SettingsNavHost(
     showWelcomeWizard: Boolean,
@@ -60,6 +75,13 @@ fun SettingsNavHost(
         if (!navController.popBackStack()) onClickBack()
     }
 
+    val entry by navController.currentBackStackEntryAsState()
+    val roots = listOf(SettingsDestination.Settings, SettingsDestination.Themes, SettingsDestination.Whispry, SettingsDestination.AppSettings)
+    val labels = listOf("Keyboard", "Themes", "Whispry", "Settings")
+    val icons = listOf(SettingsIcons.Keyboard, SettingsIcons.Themes, SettingsIcons.Voice, SettingsIcons.Settings)
+    val backdrop = rememberDefaultBackdrop()
+    Column(Modifier.fillMaxSize()) {
+    Box(Modifier.weight(1f)) {
     NavHost(
         navController = navController,
         startDestination = startDestination ?: if (showWelcomeWizard) SettingsDestination.WelcomeWizard else SettingsDestination.Settings,
@@ -69,23 +91,12 @@ fun SettingsNavHost(
         popExitTransition = { slideOutHorizontally(targetOffsetX = { +it * dir }, animationSpec = animation) }
     ) {
         composable(SettingsDestination.Settings) {
-            MainSettingsScreen(
-                onClickAbout = { navController.navigate(SettingsDestination.About) },
-                onClickTextCorrection = { navController.navigate(SettingsDestination.TextCorrection) },
-                onClickPreferences = { navController.navigate(SettingsDestination.Preferences) },
-                onClickToolbar = { navController.navigate(SettingsDestination.Toolbar) },
-                onClickGestureTyping = { navController.navigate(SettingsDestination.GestureTyping) },
-                onClickDataGathering = { navController.navigate(SettingsDestination.DataGathering) },
-                onClickAdvanced = { navController.navigate(SettingsDestination.Advanced) },
-                onClickAppearance = { navController.navigate(SettingsDestination.Appearance) },
-                onClickLanguage = { navController.navigate(SettingsDestination.Languages) },
-                onClickLayouts = { navController.navigate(SettingsDestination.Layouts) },
-                onClickDictionaries = { navController.navigate(SettingsDestination.Dictionaries) },
-                onClickCloud = { navController.navigate(SettingsDestination.Cloud) },
-                onClickWelcomeWizard = { navController.navigate(SettingsDestination.WelcomeWizard) },
-                onClickBack = ::goBack,
-            )
+            KeyboardDashboard { navController.navigate(it) }
+
         }
+        composable(SettingsDestination.Themes) { ThemesTab { navController.navigate(it) } }
+        composable(SettingsDestination.Whispry) { WhisprySettingsTab() }
+        composable(SettingsDestination.AppSettings) { AppSettingsTab { navController.navigate(it) } }
         composable(SettingsDestination.About) {
             AboutScreen(onClickBack = ::goBack)
         }
@@ -160,6 +171,37 @@ fun SettingsNavHost(
             )
         }
     }
+    }
+    val selected = roots.indexOf(entry?.destination?.route)
+    if (selected >= 0) {
+        CupertinoNavigationBar(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            backdrop = backdrop,
+            selectedTabIndex = { selected },
+            onTabSelected = { index ->
+                navController.navigate(roots[index]) {
+                    popUpTo(SettingsDestination.Settings) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            tabsCount = roots.size,
+        ) {
+            roots.forEachIndexed { index, route ->
+                CupertinoNavigationBarItem(
+                    onClick = { navController.navigate(route) {
+                        popUpTo(SettingsDestination.Settings) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    } },
+                    icon = { CupertinoIcon(icons[index], null,
+                        tint = if (selected == index) CupertinoTheme.colorScheme.accent else CupertinoTheme.colorScheme.secondaryLabel) },
+                    label = { CupertinoText(labels[index]) },
+                )
+            }
+        }
+    }
+    }
     LaunchedEffect(target.value) {
         if (target.value != SettingsDestination.Settings
             && target.value != navController.currentBackStackEntry?.destination?.route)
@@ -169,6 +211,9 @@ fun SettingsNavHost(
 
 object SettingsDestination {
     const val Settings = "settings"
+    const val Themes = "themes"
+    const val Whispry = "whispry"
+    const val AppSettings = "app_settings"
     const val WelcomeWizard = "welcome_wizard"
     const val About = "about"
     const val Cloud = "cloud"

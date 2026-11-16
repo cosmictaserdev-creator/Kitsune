@@ -17,7 +17,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -66,41 +66,13 @@ fun SliderDialog(
                 LocalTextStyle provides MaterialTheme.typography.bodyLarge
             ) {
                 Column {
-                    val stepsCount = intermediateSteps ?: 0
-                    val interactionSource = remember { MutableInteractionSource() }
-                    Slider(
+                    zone.ien.hig.CupertinoSlider(
                         value = sliderPosition,
-                        onValueChange = {
-                            sliderPosition = it
-                            if (stepsCount > 0) {
-                                val stepVal = (range.endInclusive - range.start) / (stepsCount + 1)
-                                val snappedVal = (range.start + ((it - range.start) / stepVal + 0.5f).toInt() * stepVal).coerceIn(range)
-                                if (kotlin.math.abs(snappedVal - lastHapticValue) > 0.01f) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                    lastHapticValue = snappedVal
-                                }
-                            } else {
-                                if (it.toInt() != lastHapticValue.toInt()) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                    lastHapticValue = it.toInt().toFloat()
-                                }
-                            }
-                        },
+                        onValueChange = { sliderPosition = it },
                         onValueChangeFinished = { onValueChanged(sliderPosition) },
                         valueRange = range,
-                        steps = stepsCount,
-                        interactionSource = interactionSource,
-                        thumb = { _ ->
-                            Box(
-                                modifier = Modifier
-                                    .width(4.dp)
-                                    .height(28.dp)
-                                    .background(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        shape = RoundedCornerShape(2.dp)
-                                    )
-                            )
-                        }
+                        steps = intermediateSteps ?: 0,
+                        backdrop = zone.ien.hig.utils.rememberDefaultBackdrop(),
                     )
                     Text(positionString(sliderPosition))
                 }

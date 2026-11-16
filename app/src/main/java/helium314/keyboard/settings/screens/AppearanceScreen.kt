@@ -6,7 +6,7 @@ import android.os.Build
 import androidx.compose.foundation.layout.Column
 import dev.chrisbanes.haze.haze
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
+import helium314.keyboard.settings.hig.HigSurface as Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue

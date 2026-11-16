@@ -1,0 +1,7 @@
+<resources>
+    <string name="whispry_back">Back</string>
+    <string name="whispry_search_settings">Search settings</string>
+    <string name="whispry_clear_search">Clear search</string>
+    <string name="whispry_more">More actions</string>
+    <string name="whispry_no_results">No settings found</string>
+</resources>

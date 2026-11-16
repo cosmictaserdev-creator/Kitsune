@@ -4,8 +4,8 @@ package helium314.keyboard.settings.screens
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import helium314.keyboard.settings.hig.HigSurface as Surface
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -153,7 +153,7 @@ fun createAdvancedSettings(context: Context) = listOf(
             key = it.key,
             default = Defaults.PREF_TOUCHPAD_SENSITIVITY,
             range = 0f..100f,
-            description = { value -> value.toInt().toString() }
+            description = { value -> value.toString() }
         )
     },
     Setting(context, Settings.PREF_TOUCHPAD_EDGE_SCROLL, R.string.touchpad_edge_scroll, R.string.touchpad_edge_scroll_description) {

@@ -34,15 +34,16 @@ abstract class GitCommitCountValueSource : ValueSource<Int, ValueSourceParameter
 plugins {
     id("com.android.application")
     kotlin("android")
-    kotlin("plugin.serialization") version "2.3.20"
-    kotlin("plugin.compose") version "2.3.20"
+    kotlin("plugin.serialization") version "2.3.21"
+    kotlin("plugin.compose") version "2.3.21"
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.orion.frostkeys"
+        applicationId = "com.cosmictaser.whispry.keys"
+        buildConfigField("String", "WHISPRY_PACKAGE", "\"${providers.gradleProperty("whispryPackage").orNull ?: "com.cosmictaser.whispry"}\"")
         minSdk = 24
         targetSdk = 36
         versionCode = providers.of(GitCommitCountValueSource::class.java) {}.get()
@@ -70,6 +71,7 @@ android {
             isJniDebuggable = false
         }
         create("nouserlib") { // same as release, but does not allow the user to provide a library
+            matchingFallbacks += listOf("release")
             isMinifyEnabled = true
             isShrinkResources = false
             isDebuggable = false
@@ -84,10 +86,12 @@ android {
             manifestPlaceholders["stickerProviderAuthority"] = "${defaultConfig.applicationId}.debug.stickercontentprovider"
         }
         create("runTests") { // build variant for running tests on CI that skips tests known to fail
+            matchingFallbacks += listOf("debug")
             isMinifyEnabled = false
             isJniDebuggable = false
         }
         create("debugNoMinify") { // for faster builds in IDE
+            matchingFallbacks += listOf("debug")
             isDebuggable = true
             isMinifyEnabled = false
             isJniDebuggable = false
@@ -107,13 +111,14 @@ android {
             }
             variant.outputs.forEach { output ->
                 if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
-                    output.outputFileName = "FrostKeys_${defaultConfig.versionName}-${variant.buildType}.apk"
+                    output.outputFileName = "WhispryKeys_${defaultConfig.versionName}-${variant.buildType}.apk"
                 }
             }
         }
     }
 
     buildFeatures {
+        aidl = true
         viewBinding = true
         buildConfig = true
         compose = true
@@ -169,6 +174,9 @@ android {
 }
 
 dependencies {
+    implementation(project(":hig"))
+    implementation("androidx.dynamicanimation:dynamicanimation:1.1.0")
+    implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.4")
     // androidx
     implementation("androidx.core:core-ktx:1.17.0") // 1.18.0 requires minSdk 23
     implementation("androidx.appcompat:appcompat:1.7.0")
@@ -183,7 +191,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     // newer than 2025.11.01 contains androidx.compose.material:material-android:1.10.0, which requires minSdk 23
     // maybe it's possible to use tools:overrideLibrary="androidx.compose.material" as it's not used explicitly, but probably this is just going to crash
-    implementation(platform("androidx.compose:compose-bom:2025.11.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.05.01"))
     implementation("androidx.compose.material3:material3:1.5.0-alpha04")
     implementation("androidx.graphics:graphics-shapes:1.0.1")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -336,3 +344,7 @@ tasks.matching {
 }.configureEach {
     dependsOn(patchNativeLibs16Kb)
 }
+
+ kotlin {
+    compilerOptions { optIn.add("zone.ien.hig.ExperimentalCupertinoApi") }
+ }

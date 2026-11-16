@@ -3,7 +3,7 @@ package helium314.keyboard.settings.screens
 
 import android.content.Context
 import android.content.Intent
-import androidx.compose.material3.Surface
+import helium314.keyboard.settings.hig.HigSurface as Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource

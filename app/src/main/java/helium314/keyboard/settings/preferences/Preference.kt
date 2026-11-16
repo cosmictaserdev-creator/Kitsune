@@ -2,6 +2,7 @@
 package helium314.keyboard.settings.preferences
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,12 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
+import zone.ien.hig.CupertinoIcon as Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import helium314.keyboard.settings.hig.HigSurface as Surface
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -39,11 +40,10 @@ fun PreferenceCategory(
     modifier: Modifier = Modifier,
 ) {
     Column {
-        HorizontalDivider()
         Text(
             text = title,
             modifier = modifier.padding(top = 12.dp, start = 16.dp, end = 8.dp, bottom = 8.dp),
-            color = MaterialTheme.colorScheme.secondary,
+            color = zone.ien.hig.theme.CupertinoTheme.colorScheme.secondaryLabel,
             style = MaterialTheme.typography.titleSmall
         )
     }
@@ -61,6 +61,8 @@ fun Preference(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 1.dp)
+            .background(zone.ien.hig.theme.CupertinoTheme.colorScheme.secondarySystemGroupedBackground, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .heightIn(min = 44.dp)
             .padding(vertical = 10.dp, horizontal = 12.dp),

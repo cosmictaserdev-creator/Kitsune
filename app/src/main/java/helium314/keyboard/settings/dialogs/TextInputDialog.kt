@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.material3.TextFieldLabelScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,13 +65,13 @@ fun TextInputDialog(
                     Spacer(Modifier.height(6.dp))
                 }
                 val focusRequester = remember { FocusRequester() }
-                OutlinedTextField(
+                zone.ien.hig.CupertinoTextField(
                     value = textState.value,
                     onValueChange = { s -> textState.value = s },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
-                    label = textInputLabel,
+                    placeholder = textInputLabel,
                     keyboardOptions = KeyboardOptions(keyboardType = if (isPassword) KeyboardType.Password else keyboardType),
                     visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
                     singleLine = singleLine,

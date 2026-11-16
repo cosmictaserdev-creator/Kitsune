@@ -12,7 +12,7 @@ import android.os.ParcelFileDescriptor
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.Text
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue

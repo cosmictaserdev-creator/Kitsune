@@ -194,6 +194,7 @@ public class LatinIME extends InputMethodService implements
 
     // TODO: Move these {@link View}s to {@link KeyboardSwitcher}.
     private View mInputView;
+    private helium314.keyboard.latin.whispry.WhispryKeyboardController mWhispry;
     private InsetsOutlineProvider mInsetsUpdater;
     private SuggestionStripView mSuggestionStripView;
 
@@ -772,6 +773,7 @@ public class LatinIME extends InputMethodService implements
         mDisplayContext = KtxKt.getDisplayContext(this);
         KeyboardSwitcher.init(this);
         super.onCreate();
+        mWhispry = new helium314.keyboard.latin.whispry.WhispryKeyboardController(this);
         mSavedStateRegistryController.performRestore(null);
         mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE);
         mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START);
@@ -1030,6 +1032,7 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onDestroy() {
         mIsDestroyed = true;
+        if (mWhispry != null) mWhispry.destroy();
         sInstance = null;
         mHandler.removeCallbacksAndMessages(null);
         mInputLogic.onDestroy();
@@ -1162,6 +1165,7 @@ public class LatinIME extends InputMethodService implements
         mInsetsUpdater = ViewOutlineProviderUtilsKt.setInsetsOutlineProvider(view);
         FrostedGlassHelper.configureFrostedGlass(this, view, FrostedGlassHelper.isFrostedTheme(this));
         updateSuggestionStripView(view);
+        if (mWhispry != null) mWhispry.attach(view);
         // Ensure navigation bar insets are dispatched immediately to the new view tree,
         // preventing the first-frame race condition where the keyboard draws behind the
         // nav bar.
@@ -1282,6 +1286,7 @@ public class LatinIME extends InputMethodService implements
 
     void onStartInputViewInternal(final EditorInfo editorInfo, final boolean restarting) {
         super.onStartInputView(editorInfo, restarting);
+        if (mWhispry != null) mWhispry.inputStarted(editorInfo, restarting);
         mClipboardHistoryManager.updatePrimaryClip();
 
         setGestureDataGatheringMode(editorInfo);
@@ -1456,6 +1461,7 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onWindowShown() {
         super.onWindowShown();
+        if (mWhispry != null) mWhispry.show();
         mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
         if (isInputViewShown()) {
             setNavigationBarColor();
@@ -1467,6 +1473,7 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onWindowHidden() {
         super.onWindowHidden();
+        if (mWhispry != null) mWhispry.hide();
         mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
         Log.i(TAG, "onWindowHidden");
 
@@ -1906,8 +1913,11 @@ public class LatinIME extends InputMethodService implements
             }
         }
         if (KeyCode.VOICE_INPUT == event.getKeyCode()) {
-            mRichImm.switchToShortcutIme(this);
+            if (mWhispry != null) mWhispry.micTap();
+            return;
         }
+        if ((event.getCodePoint() == Constants.CODE_ENTER || event.getKeyCode() == Constants.CODE_ENTER)
+                && mWhispry != null && mWhispry.consumeEnter()) return;
         if (event.getKeyCode() == KeyCode.AI_TOOLS || event.getKeyCode() == -214) {
             KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.AI_TOOLS);
             return;

@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import zone.ien.hig.CupertinoText as Text
+import helium314.keyboard.settings.hig.HigTextField as TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

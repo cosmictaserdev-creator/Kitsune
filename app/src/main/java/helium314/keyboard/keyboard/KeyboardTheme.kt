@@ -189,6 +189,12 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
             return getThemeColors(themeName!!, themeStyle!!, context, prefs, isNight)
         }
 
+        /** Resolves preview colors without writing preferences or changing the active keyboard. */
+        fun getPreviewColors(context: Context, name: String): Colors = getThemeColors(
+            name, context.prefs().getString(Settings.PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE)!!,
+            context, context.prefs(), false
+        )
+
         private fun getThemeColors(themeName: String, themeStyle: String, context: Context, prefs: SharedPreferences, isNightParam: Boolean): Colors {
             val isNight = isDarkThemeActive(context)
             val hasBorders = prefs.getBoolean(Settings.PREF_THEME_KEY_BORDERS, Defaults.PREF_THEME_KEY_BORDERS)

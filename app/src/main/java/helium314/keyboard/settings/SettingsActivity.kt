@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import helium314.keyboard.settings.hig.HigSurface as Surface
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,7 +70,7 @@ open class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPre
     private val crashReportFiles = MutableStateFlow<List<File>>(emptyList())
     private var paused = true
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, zone.ien.hig.ExperimentalCupertinoApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Settings.getValues() == null) {
@@ -90,6 +90,10 @@ open class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPre
         val cv = ComposeView(context = this)
         setContentView(cv)
         cv.setContent {
+            val revision by prefChanged.collectAsState()
+            androidx.compose.runtime.CompositionLocalProvider(
+                zone.ien.hig.compat.LocalGlassEnabled provides (revision >= 0 && !prefs.getBoolean("settings_solid_surfaces", false))
+            ) {
             Theme {
                 Surface {
                     val dictUri by dictUriFlow.collectAsState()
@@ -153,6 +157,7 @@ open class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPre
                         )
                     }
                 }
+            }
             }
         }
 

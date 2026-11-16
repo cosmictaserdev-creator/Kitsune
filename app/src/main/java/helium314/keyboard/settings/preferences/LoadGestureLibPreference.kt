@@ -4,7 +4,7 @@ package helium314.keyboard.settings.preferences
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
-import androidx.compose.material3.Text
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

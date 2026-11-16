@@ -16,14 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import helium314.keyboard.settings.hig.HigButton as Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
+import helium314.keyboard.settings.hig.HigCard as Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
+import zone.ien.hig.CupertinoIcon as Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import helium314.keyboard.settings.hig.HigSurface as Surface
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue

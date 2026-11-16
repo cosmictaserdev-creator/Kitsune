@@ -67,7 +67,12 @@ fun Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit
         colorScheme = colorScheme,
         typography = typography,
         shapes = shapes,
-        content = content
+        content = {
+            zone.ien.hig.theme.CupertinoTheme(
+                colorScheme = if (dark) zone.ien.hig.theme.darkColorScheme(accent = colorScheme.primary)
+                else zone.ien.hig.theme.lightColorScheme(accent = colorScheme.primary)
+            ) { content() }
+        }
     )
 }
 

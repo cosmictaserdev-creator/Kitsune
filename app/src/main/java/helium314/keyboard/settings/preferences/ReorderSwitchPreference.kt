@@ -2,7 +2,7 @@
 package helium314.keyboard.settings.preferences
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Text
+import zone.ien.hig.CupertinoText as Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
