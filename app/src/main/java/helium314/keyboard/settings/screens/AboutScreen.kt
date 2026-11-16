@@ -197,7 +197,7 @@ fun createAboutSettings(context: Context) = listOf(
             description = it.description,
             onClick = {
                 val intent = Intent()
-                intent.data = "https://t.me/FrostKeys".toUri()
+                intent.data = "https://github.com/cosmictaserdev-creator/Kitsune/discussions".toUri()
                 intent.action = Intent.ACTION_VIEW
                 ctx.startActivity(intent)
             },

@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AnimatedFrostKeysIcon(
+fun AnimatedKitsuneIcon(
     modifier: Modifier = Modifier,
     isAnimating: Boolean = true,
     tint: Color = MaterialTheme.colorScheme.primary

@@ -537,7 +537,7 @@ fun SplashScreenView(
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "FrostKeys",
+                text = "Kitsune",
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Medium,
@@ -576,7 +576,7 @@ fun SplashScreenView(
                 )
             }
 
-            AnimatedFrostKeysIcon(
+            AnimatedKitsuneIcon(
                 modifier = Modifier.size(320.dp),
                 isAnimating = isAnimating,
                 tint = MaterialTheme.colorScheme.primary
@@ -702,7 +702,7 @@ fun SetupScreenView(
                                 if (isEnabled) {
                                     onSwitchClicked()
                                 } else {
-                                    showToast("Please enable FrostKeys first!")
+                                    showToast("Please enable Kitsune first!")
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),

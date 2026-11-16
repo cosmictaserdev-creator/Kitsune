@@ -1,6 +1,7 @@
 import com.android.build.api.variant.ApplicationVariant
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.File
+import java.util.Properties
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -42,7 +43,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.cosmictaser.whispry.keys"
+        applicationId = "com.cosmictaser.kitsune"
         buildConfigField("String", "WHISPRY_PACKAGE", "\"${providers.gradleProperty("whispryPackage").orNull ?: "com.cosmictaser.whispry"}\"")
         minSdk = 24
         targetSdk = 36
@@ -63,8 +64,24 @@ android {
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
 
+    // Release signing: keystore.properties (local, git-ignored) or KITSUNE_* environment variables (CI).
+    val keystoreProps = Properties().apply {
+        rootProject.file("keystore.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
+    }
+    fun signingValue(prop: String, env: String): String? = keystoreProps.getProperty(prop) ?: System.getenv(env)
+    val releaseStoreFile = signingValue("storeFile", "KITSUNE_KEYSTORE_FILE")
+    signingConfigs {
+        if (releaseStoreFile != null) create("kitsuneRelease") {
+            storeFile = rootProject.file(releaseStoreFile)
+            storePassword = signingValue("storePassword", "KITSUNE_KEYSTORE_PASSWORD")
+            keyAlias = signingValue("keyAlias", "KITSUNE_KEY_ALIAS")
+            keyPassword = signingValue("keyPassword", "KITSUNE_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("kitsuneRelease")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = false
             isDebuggable = false
@@ -100,6 +117,7 @@ android {
             manifestPlaceholders["stickerProviderAuthority"] = "${defaultConfig.applicationId}.debug.stickercontentprovider"
         }
 
+        androidComponents.beforeVariants { (it as com.android.build.api.variant.HasUnitTestBuilder).enableUnitTest = true } // Compose Preview tasks need it for release variants too
         androidComponents.onVariants { variant: ApplicationVariant ->
             if (variant.buildType == "debug") {
                 // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
@@ -111,7 +129,7 @@ android {
             }
             variant.outputs.forEach { output ->
                 if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
-                    output.outputFileName = "WhispryKeys_${defaultConfig.versionName}-${variant.buildType}.apk"
+                    output.outputFileName = "Kitsune_${defaultConfig.versionName}-${variant.buildType}.apk"
                 }
             }
         }

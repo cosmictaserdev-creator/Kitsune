@@ -2,4 +2,4 @@ include ':app'
 include ':tools:make-emoji-keys'
 
 include ':hig'
-rootProject.name = 'WhispryKeys'
+rootProject.name = 'Kitsune'
