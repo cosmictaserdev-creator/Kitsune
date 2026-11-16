@@ -9,6 +9,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -47,8 +51,13 @@ fun SettingsSection(title: String, footer: String? = null, content: @Composable 
     Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
         CupertinoText(title.uppercase(), color = CupertinoTheme.colorScheme.secondaryLabel,
             style = CupertinoTheme.typography.footnote, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
-        CupertinoSurface(shape = RoundedCornerShape(20.dp), color = CupertinoTheme.colorScheme.secondarySystemGroupedBackground) {
-            Column(Modifier.fillMaxWidth(), content = content)
+        val surface = CupertinoTheme.colorScheme.secondarySystemGroupedBackground
+        CupertinoSurface(shape = RoundedCornerShape(20.dp), color = surface) {
+            // Rows draw a hairline at their bottom edge; the last one is painted over here so separators only sit between rows.
+            Column(Modifier.fillMaxWidth().drawWithContent {
+                drawContent()
+                drawRect(surface, Offset(0f, size.height - 1.dp.toPx()), Size(size.width, 1.dp.toPx()))
+            }, content = content)
         }
         if (footer != null) CupertinoText(footer, color = CupertinoTheme.colorScheme.secondaryLabel,
             style = CupertinoTheme.typography.footnote, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
@@ -57,11 +66,16 @@ fun SettingsSection(title: String, footer: String? = null, content: @Composable 
 
 @Composable
 fun SettingsRow(title: String, subtitle: String? = null, icon: ImageVector? = null, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 60.dp).padding(16.dp),
+    val separator = CupertinoTheme.colorScheme.separator
+    val inset = if (icon != null) 66.dp else 16.dp
+    Row(Modifier.fillMaxWidth().clickable(onClick = onClick)
+        .drawBehind { drawLine(separator, Offset(inset.toPx(), size.height - 0.5.dp.toPx()), Offset(size.width, size.height - 0.5.dp.toPx()), 1.dp.toPx() * 0.5f) }
+        .heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        if (icon != null) Box(Modifier.size(36.dp).background(CupertinoTheme.colorScheme.accent.copy(alpha = .12f), RoundedCornerShape(11.dp)),
+        // iOS Settings style: solid rounded-square tile with a white glyph.
+        if (icon != null) Box(Modifier.size(34.dp).background(CupertinoTheme.colorScheme.accent, RoundedCornerShape(9.dp)),
             contentAlignment = Alignment.Center) {
-            CupertinoIcon(icon, null, tint = CupertinoTheme.colorScheme.accent, modifier = Modifier.size(21.dp))
+            CupertinoIcon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f)) {
             CupertinoText(title, style = CupertinoTheme.typography.body)
