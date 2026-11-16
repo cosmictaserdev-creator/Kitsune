@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.ime
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
@@ -185,7 +186,9 @@ fun SettingsNavHost(
     }
     }
     }
-    if (selected >= 0) {
+    // Hide the floating bar while a keyboard is up so it never sits on top of the keys.
+    val imeVisible = WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+    if (selected >= 0 && !imeVisible) {
         CupertinoNavigationBar(
             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
             backdrop = backdrop,

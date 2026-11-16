@@ -213,7 +213,7 @@ class WhispryKeyboardController(private val ime: LatinIME) {
             binding = ime.bindService(Intent().setComponent(ComponentName(APP, "$IMPLEMENTATION.KeyboardBridgeService")),
                 connection, Context.BIND_AUTO_CREATE)
             if (!binding) error("Update Whispry to connect your keyboard.", "CONNECTION")
-        } catch (_: SecurityException) { error("Install matching builds of Whispry and Whispry Keys.", "CONNECTION") }
+        } catch (_: SecurityException) { error("Install matching builds of Whispry and Kitsune.", "CONNECTION") }
         if (binding) scope.launch {
             delay(6000)
             if (api == null && startWhenConnected) { startWhenConnected = false; error("Whispry didn't respond. Open the app and try again.", "CONNECTION") }

@@ -286,7 +286,7 @@ fun WelcomeWizard(
             if (isEnabled && isCurrent) {
                 close()
             } else {
-                showToast("Please make sure to both Enable and Switch to Frostkeys!")
+                showToast("Please make sure to both Enable and Switch to Kitsune!")
             }
         }
     }
@@ -652,7 +652,7 @@ fun SetupScreenView(
                             selected = isEnabled,
                             headlineContent = {
                                 Text(
-                                    text = "Enable Frostkeys",
+                                    text = "Enable Kitsune",
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontSize = 17.sp,
                                         fontWeight = FontWeight.SemiBold,
@@ -662,7 +662,7 @@ fun SetupScreenView(
                             },
                             supportingContent = {
                                 Text(
-                                    text = "Check \"Frostkeys\" in your language & input settings.",
+                                    text = "Check \"Kitsune\" in your language & input settings.",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontSize = 13.sp,
                                         fontFamily = fontFamily
@@ -710,7 +710,7 @@ fun SetupScreenView(
                             selected = isCurrent,
                             headlineContent = {
                                 Text(
-                                    text = "Switch to Frostkeys",
+                                    text = "Switch to Kitsune",
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontSize = 17.sp,
                                         fontWeight = FontWeight.SemiBold,
@@ -720,7 +720,7 @@ fun SetupScreenView(
                             },
                             supportingContent = {
                                 Text(
-                                    text = "Select \"Frostkeys\" as your active text-input method.",
+                                    text = "Select \"Kitsune\" as your active text-input method.",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontSize = 13.sp,
                                         fontFamily = fontFamily
@@ -760,7 +760,7 @@ fun SetupScreenView(
                                 if (isCurrent) {
                                     isEssentialExpanded = !isEssentialExpanded
                                 } else {
-                                    showToast("Please switch to Frostkeys first!")
+                                    showToast("Please switch to Kitsune first!")
                                 }
                             },
                             shape = if (isEssentialExpanded && isCurrent) {
@@ -781,7 +781,7 @@ fun SetupScreenView(
                             },
                             supportingContent = {
                                 Text(
-                                    text = "Configure these essential settings to unlock full potential of Frostkeys.",
+                                    text = "Configure these essential settings to unlock full potential of Kitsune.",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontSize = 13.sp,
                                         fontFamily = fontFamily

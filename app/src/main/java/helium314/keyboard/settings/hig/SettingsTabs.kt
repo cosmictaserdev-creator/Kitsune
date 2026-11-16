@@ -36,7 +36,7 @@ import zone.ien.hig.theme.CupertinoTheme
 
 @Composable
 fun KeyboardDashboard(navigate: (String) -> Unit) {
-    SearchSettingsScreen({}, "Whispry Keys", emptyList(), showBackButton = false) {
+    SearchSettingsScreen({}, "Kitsune", emptyList(), showBackButton = false) {
         SettingsSection("Make it yours", "Your keyboard, your words. Voice tools connect to the separate Whispry app.") {
             SettingsRow("Languages & layouts", "Choose how you type", SettingsIcons.Language) { navigate(SettingsDestination.Languages) }
             SettingsRow("Typing", "Autocorrection, suggestions and spacing", SettingsIcons.Typing) { navigate(SettingsDestination.TextCorrection) }
