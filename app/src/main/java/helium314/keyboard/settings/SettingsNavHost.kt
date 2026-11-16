@@ -172,7 +172,7 @@ fun SettingsNavHost(
             SubtypeScreen(initialSubtype = it.arguments?.getString("subtype")!!.toSettingsSubtype(), onClickBack = ::goBack)
         }
         composable(SettingsDestination.WelcomeWizard) {
-            WelcomeWizard(
+            KitsuneOnboarding(
                 close = {
                     onShowWelcomeWizardChanged(false)
                     navController.navigate(SettingsDestination.Settings) {
