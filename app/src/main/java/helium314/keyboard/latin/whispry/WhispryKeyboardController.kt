@@ -41,6 +41,17 @@ data class VoiceState(
     }
 }
 
+data class ToolsState(
+    val ids: List<String>, val names: List<String>, val emojis: List<String>, val groups: List<String>,
+    val selected: String, val mode: String, val translate: Boolean, val translateLanguage: String,
+) {
+    companion object {
+        fun from(b: Bundle) = ToolsState(b.getStringArrayList("ids").orEmpty(), b.getStringArrayList("names").orEmpty(),
+            b.getStringArrayList("emojis").orEmpty(), b.getStringArrayList("groups").orEmpty(), b.getString("selected", "NONE"),
+            b.getString("mode", "SESSION"), b.getBoolean("translate"), b.getString("translateLanguage", "English"))
+    }
+}
+
 /** IME adapter only: Whispry owns recording, keys, providers, errors and history. */
 class WhispryKeyboardController(private val ime: LatinIME) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -51,6 +62,16 @@ class WhispryKeyboardController(private val ime: LatinIME) {
     private var shown = false
     private var startWhenConnected = false
     private var overlay: ComposeView? = null
+    private var panel: ComposeView? = null
+    private var keys: View? = null
+    private val _panelOpen = MutableStateFlow(false)
+    val panelOpen = _panelOpen.asStateFlow()
+    private val _tools = MutableStateFlow<ToolsState?>(null)
+    val tools = _tools.asStateFlow()
+    private val _toolsMessage = MutableStateFlow("Connecting to Whispry…")
+    val toolsMessage = _toolsMessage.asStateFlow()
+    private val tapHandler = Handler(Looper.getMainLooper())
+    private var pendingTap: Runnable? = null
     private var toolbar: View? = null
     private var hidden = false
     private var generation = 0L
@@ -72,6 +93,7 @@ class WhispryKeyboardController(private val ime: LatinIME) {
                 try {
                     val snapshot = withContext(Dispatchers.IO) { api!!.connect(callback) }
                     accept(snapshot)
+                    if (_panelOpen.value) loadTools()
                     if (startWhenConnected) {
                         startWhenConnected = false
                         if (!_state.value.busy && _state.value.phase != "READY") begin()
@@ -99,6 +121,70 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         }
         hidden = false
         renderVisibility()
+        // The tools panel sits over the lower keyboard area (below the strip) and swallows touches.
+        panel?.let { (it.parent as? ViewGroup)?.removeView(it); it.disposeComposition() }
+        keys = root.findViewById(R.id.keyboard_view_wrapper)
+        val input = root as? FrameLayout
+        panel = if (input == null) null else ComposeView(ime).apply {
+            visibility = View.GONE
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent { ToolsPanel(this@WhispryKeyboardController) }
+            input.addView(this, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
+        renderPanel()
+    }
+
+    private fun renderPanel() {
+        val view = panel ?: return
+        val open = _panelOpen.value
+        if (open) {
+            val strip = (overlay?.parent as? View)
+            val frame = view.parent as? View
+            val top = if (strip != null && frame != null) (strip.bottom + ((strip.parent as? View)?.top ?: 0)).coerceAtLeast(0) else 0
+            (view.layoutParams as? FrameLayout.LayoutParams)?.let { it.topMargin = top; view.layoutParams = it }
+        }
+        view.visibility = if (open) View.VISIBLE else View.GONE
+        // Dim/blur the keys beneath; Android < 12 just relies on the panel's translucent scrim.
+        keys?.let { k ->
+            if (Build.VERSION.SDK_INT >= 31) k.setRenderEffect(if (open) android.graphics.RenderEffect.createBlurEffect(18f, 18f, android.graphics.Shader.TileMode.CLAMP) else null)
+            k.importantForAccessibility = if (open) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+        }
+    }
+
+    fun togglePanel() { if (_panelOpen.value) closePanel() else openPanel() }
+    fun openPanel() {
+        if (Build.VERSION.SDK_INT < 26) { error("Voice tools need Android 8 or later.", "SDK"); return }
+        if (!installed()) { error("Install Whispry to use voice tools.", "MISSING"); return }
+        _panelOpen.value = true; renderPanel(); loadTools()
+    }
+    fun closePanel() { _panelOpen.value = false; renderPanel() }
+
+    private fun loadTools() {
+        val service = api
+        if (service == null) { _toolsMessage.value = "Connecting to Whispry…"; connect(); return }
+        scope.launch {
+            try {
+                val bundle = withContext(Dispatchers.IO) { service.tools() }
+                _tools.value = ToolsState.from(bundle)
+            } catch (_: Exception) { _toolsMessage.value = "Update Whispry to use tones."; _tools.value = null }
+        }
+    }
+
+    fun selectTone(id: String) {
+        val service = api ?: return
+        _tools.value = _tools.value?.copy(selected = id, translate = false)
+        scope.launch { runCatching { withContext(Dispatchers.IO) { service.setTranslation(false, ""); service.selectTone(id) } } }
+    }
+
+    fun setTranslation(enabled: Boolean, language: String) {
+        val service = api ?: return
+        _tools.value = _tools.value?.copy(translate = enabled, translateLanguage = language.ifBlank { _tools.value?.translateLanguage ?: "English" })
+        scope.launch { runCatching { withContext(Dispatchers.IO) { service.setTranslation(enabled, language) } } }
+    }
+
+    fun openFeature(host: String) {
+        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("whispry://$host")).setPackage(APP).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { ime.startActivity(intent) }.onFailure { error("Update Whispry to open this tool.", "CONNECTION") }
     }
 
     fun inputStarted(info: EditorInfo?, restarting: Boolean) {
@@ -110,8 +196,8 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         if (requestSession != null || _state.value.visible) connect()
         renderVisibility(); deliver(false)
     }
-    fun hide() { shown = false; release() }
-    fun destroy() { release(); overlay?.disposeComposition(); scope.cancel() }
+    fun hide() { shown = false; closePanel(); release() }
+    fun destroy() { release(); overlay?.disposeComposition(); panel?.disposeComposition(); scope.cancel() }
 
     private fun installed() = ime.packageManager.getLaunchIntentForPackage(APP) != null
 
@@ -135,7 +221,19 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         binding = false
     }
 
+    /** One tap starts dictation once the double-tap window has passed; a second tap opens/closes the tools panel. */
     fun micTap() {
+        pendingTap?.let {
+            tapHandler.removeCallbacks(it); pendingTap = null
+            togglePanel(); return
+        }
+        val run = Runnable { pendingTap = null; singleMicTap() }
+        pendingTap = run
+        tapHandler.postDelayed(run, android.view.ViewConfiguration.getDoubleTapTimeout().toLong())
+    }
+
+    private fun singleMicTap() {
+        if (Build.VERSION.SDK_INT < 26) { error("Voice typing needs Android 8 or later.", "SDK"); return }
         val info = ime.currentInputEditorInfo
         val variation = (info?.inputType ?: 0) and InputType.TYPE_MASK_VARIATION
         val kind = (info?.inputType ?: 0) and InputType.TYPE_MASK_CLASS
