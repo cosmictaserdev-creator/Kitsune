@@ -57,7 +57,9 @@ class WhispryKeyboardController(private val ime: LatinIME) {
     private var requestGeneration = -1L
     private var requestSession: String? = null
     private var lastResult: String? = null
-    private val cancelledSessions = mutableSetOf<String>()
+    private val cancelledSessions = object : LinkedHashSet<String>() {
+        fun remember(id: String) { add(id); while (size > 16) remove(first()) }
+    }
     private val delivered = ime.getSharedPreferences("whispry_delivery", Context.MODE_PRIVATE)
 
     private val callback = object : IKeyboardBridgeCallback.Stub() {
@@ -144,6 +146,7 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         if (!installed()) { error("Install Whispry to use voice typing.", "MISSING"); return }
         if (_state.value.busy) return
         if (_state.value.phase == "READY") { deliver(true); return }
+        if (_state.value.phase == "ERROR" && _state.value.retry) { retry(); return }
         requestGeneration = generation
         if (api == null) {
             startWhenConnected = true
@@ -156,6 +159,7 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         val service = api ?: return
         val target = ime.currentInputEditorInfo?.packageName.orEmpty()
         if (target.isBlank()) { error("Tap a text field before recording.", "FIELD"); return }
+        val frozenGeneration = generation // editor identity is frozen with the target, before any async work
         scope.launch {
             try {
                 val prepared = withContext(Dispatchers.IO) {
@@ -163,8 +167,15 @@ class WhispryKeyboardController(private val ime: LatinIME) {
                     start to service.connect(callback)
                 }
                 val snapshot = VoiceState.from(prepared.second)
+                if (frozenGeneration != generation) {
+                    // The user moved to another field while Whispry was preparing: drop the session.
+                    cancelledSessions.remember(snapshot.id)
+                    if (snapshot.id.isNotBlank()) command(snapshot.id, "CANCEL")
+                    _state.value = VoiceState(); renderVisibility()
+                    return@launch
+                }
                 requestSession = snapshot.id
-                requestGeneration = generation
+                requestGeneration = frozenGeneration
                 _state.value = snapshot.copy(phase = "STARTING", message = "Starting Whispry…")
                 renderVisibility()
                 if (!snapshot.microphone) openRecordingScreen()
@@ -205,7 +216,7 @@ class WhispryKeyboardController(private val ime: LatinIME) {
     fun pause() = command("PAUSE")
     fun cancel() {
         startWhenConnected = false
-        cancelledSessions.add(_state.value.id)
+        cancelledSessions.remember(_state.value.id)
         if (_state.value.id.isNotBlank()) command("CANCEL")
         _state.value = VoiceState(); renderVisibility()
     }
@@ -224,8 +235,7 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         finish(); return true
     }
 
-    private fun command(action: String) {
-        val id = _state.value.id
+    private fun command(action: String, id: String = _state.value.id) {
         val service = api ?: return
         scope.launch {
             try { withContext(Dispatchers.IO) { service.command(id, action) } }

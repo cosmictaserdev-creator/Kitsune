@@ -27,6 +27,8 @@ import zone.ien.hig.*
 import zone.ien.hig.theme.CupertinoTheme
 
 val LocalHazeState = staticCompositionLocalOf<HazeState> { error("No HazeState provided") }
+/** Space reserved for the floating tab bar on root tabs. */
+val LocalFloatingBarInset = staticCompositionLocalOf { 0.dp }
 val LocalSearchInnerPadding = staticCompositionLocalOf { PaddingValues(0.dp) }
 data class SearchState(
     val showSearch: Boolean,
@@ -116,7 +118,7 @@ fun <T: Any?> SearchScreen(
                     if (android.os.Build.VERSION.SDK_INT >= 31 && zone.ien.hig.compat.LocalGlassEnabled.current)
                         Modifier.haze(haze) else Modifier
                 ), contentPadding = PaddingValues(
-                    top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 20.dp)) {
+                    top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 20.dp + LocalFloatingBarInset.current)) {
                     if (!hideTopSearchBar || showSearch) item("search") { field() }
                     if (query.text.isNotBlank() || content == null) {
                         val results = filteredItems(query.text)

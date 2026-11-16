@@ -17,8 +17,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import helium314.keyboard.settings.hig.*
 import zone.ien.hig.*
 import zone.ien.hig.utils.rememberDefaultBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import zone.ien.hig.theme.CupertinoTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
@@ -80,8 +84,16 @@ fun SettingsNavHost(
     val labels = listOf("Keyboard", "Themes", "Whispry", "Settings")
     val icons = listOf(SettingsIcons.Keyboard, SettingsIcons.Themes, SettingsIcons.Voice, SettingsIcons.Settings)
     val backdrop = rememberDefaultBackdrop()
-    Column(Modifier.fillMaxSize()) {
-    Box(Modifier.weight(1f)) {
+    val selected = roots.indexOf(entry?.destination?.route)
+    fun selectTab(index: Int) = navController.navigate(roots[index]) {
+        popUpTo(SettingsDestination.Settings) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+    // Floating pill: content fills the screen and scrolls behind the bar, which samples it for the glass effect.
+    Box(Modifier.fillMaxSize()) {
+    CompositionLocalProvider(LocalFloatingBarInset provides if (selected >= 0) 104.dp else 0.dp) {
+    Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) {
     NavHost(
         navController = navController,
         startDestination = startDestination ?: if (showWelcomeWizard) SettingsDestination.WelcomeWizard else SettingsDestination.Settings,
@@ -172,28 +184,18 @@ fun SettingsNavHost(
         }
     }
     }
-    val selected = roots.indexOf(entry?.destination?.route)
+    }
     if (selected >= 0) {
         CupertinoNavigationBar(
-            modifier = Modifier.padding(horizontal = 12.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
             backdrop = backdrop,
             selectedTabIndex = { selected },
-            onTabSelected = { index ->
-                navController.navigate(roots[index]) {
-                    popUpTo(SettingsDestination.Settings) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
+            onTabSelected = ::selectTab,
             tabsCount = roots.size,
         ) {
             roots.forEachIndexed { index, route ->
                 CupertinoNavigationBarItem(
-                    onClick = { navController.navigate(route) {
-                        popUpTo(SettingsDestination.Settings) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    } },
+                    onClick = { selectTab(index) },
                     icon = { CupertinoIcon(icons[index], null,
                         tint = if (selected == index) CupertinoTheme.colorScheme.accent else CupertinoTheme.colorScheme.secondaryLabel) },
                     label = { CupertinoText(labels[index]) },
