@@ -356,12 +356,22 @@ class WhispryKeyboardController(private val ime: LatinIME) {
         // Normal keyboard text transaction updates composition and suggestions as well as the field.
         try {
             ime.onTextInput(result.text)
-            lastResult = result.resultId
-            delivered.edit().putString("lastResult", result.resultId).apply()
-        } catch (_: Exception) { error("Transcript saved. Tap Insert to try again.", "INSERT"); return }
+        } catch (_: Exception) { _state.value = result.copy(message = "Transcript saved. Tap send to try again.", error = "INSERT"); return }
+        // onTextInput has no success flag, so confirm the host editor actually received the text before
+        // recording it as delivered. A null read means the editor can't be inspected; that is not a failure.
+        if (!editorContainsTail(result.text)) { _state.value = result.copy(message = "The app didn't accept the text. Tap send to try again.", error = "INSERT"); return }
+        lastResult = result.resultId
+        delivered.edit().putString("lastResult", result.resultId).apply()
         val copied = copyResult(result)
         if (copied) acknowledge(result)
         else _state.value = result.copy(message = "Inserted. Tap Copy to copy your transcript.", error = "COPY")
+    }
+
+    private fun editorContainsTail(text: String): Boolean {
+        val tail = text.trimEnd().takeLast(40)
+        if (tail.isEmpty()) return true
+        val before = ime.currentInputConnection?.getTextBeforeCursor(tail.length + 16, 0) ?: return ime.currentInputConnection != null
+        return before.toString().contains(tail)
     }
 
     private fun copyResult(result: VoiceState): Boolean = runCatching {

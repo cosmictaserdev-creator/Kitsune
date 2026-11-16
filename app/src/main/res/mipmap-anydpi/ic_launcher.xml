@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pre-Android 8 launcher icon (the adaptive icon is used from API 26). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape android:shape="rectangle"><solid android:color="#17141F"/></shape></item>
+    <item android:drawable="@drawable/ic_launcher_foreground"/>
+</layer-list>
